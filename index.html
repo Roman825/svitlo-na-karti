@@ -19,6 +19,10 @@
   --lit:#f2b01e;--off:#3d5a80;--maybe:#b0762a;--unk:#a3a9b3;--now:#0b6fd6}
 [data-theme=light] .leaflet-tile-pane{filter:grayscale(.55) brightness(1.03)}
 #theme{padding:3px 9px;margin-left:auto}
+.citychip{width:auto!important;height:auto!important}
+.citychip span{display:inline-block;transform:translate(-50%,-50%);white-space:nowrap;padding:3px 10px;border-radius:12px;background:var(--now);color:#fff;font-size:12px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.35);cursor:pointer;transition:transform .15s ease}
+.citychip span:hover{transform:translate(-50%,-50%) scale(1.08)}
+[data-theme=dark] .citychip span{color:#06202e}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.4}
 #map{position:absolute;inset:0;background:var(--bg)}
@@ -172,11 +176,14 @@ input[type=search]{width:100%}
       Object.keys(src[k]||{}).forEach(function(raw){var g=raw.replace('GPV',''),d=src[k][raw]||{},hours=[];for(var h=1;h<=24;h++)hours.push(d[h]);sched[day][g]=pack(hours);groups[g]=1;});
     });
     if(!Object.keys(sched).length)return;
-    op.sched=sched;op.groups=Object.keys(groups).sort(natural);op.updated=f.update||op.updated;op.live=true;
+    // Живі дні доповнюють збережені (у збереженій копії є ще й підтверджені дні без відключень)
+    var fresh=false;Object.keys(sched).forEach(function(d){if(!op.sched[d]||d>=dayKey)fresh=true;op.sched[d]=sched[d];});
+    Object.keys(op.sched).forEach(function(d){Object.keys(op.sched[d]).forEach(function(g){groups[g]=1;});});
+    op.groups=Object.keys(groups).sort(natural);if(sched[dayKey])op.updated=f.update||op.updated;op.live=true;
   }
 
   var t=720,dayKey=kyivDate(new Date());
-  function days(){var set={};OPS.forEach(function(o){Object.keys(o.sched).forEach(function(d){set[d]=1;});});return Object.keys(set).sort();}
+  function days(){var set={};OPS.forEach(function(o){Object.keys(o.sched).forEach(function(d){set[d]=1;});});var all=Object.keys(set).sort(),from=new Date(Date.now()-864e5).toISOString().slice(0,10),fresh=all.filter(function(d){return d>=from;});return fresh.length?fresh:all.slice(-2);}   // лише вчора, сьогодні, завтра
   // Стан групи оператора: 0 світло є, 1 немає, 2 можливе, 3 немає даних
   function st(op,g,slot){var d=op&&op.sched[dayKey];if(!d||!d[g])return 3;return +d[g].charAt(slot);}
   function regionShare(op,slot){var n=0,off=0;op.groups.forEach(function(g){var s=st(op,g,slot);if(s===3)return;n++;if(s===1)off++;});return {n:n,off:off};}
@@ -220,7 +227,7 @@ input[type=search]{width:100%}
   var HOUSE_ZOOM=10;   // будинки малюються лише при наближенні
   function draw(){
     var size=map.getSize(),pad=Math.round(Math.max(size.x,size.y)*0.25),tl=map.containerPointToLayerPoint([-pad,-pad]);
-    L.DomUtil.setPosition(cv,tl);
+    L.DomUtil.setPosition(cv,tl);cvPos=tl;cvPad=pad;cvCenter=map.getCenter();cvZoom=map.getZoom();
     var w=size.x+2*pad,h=size.y+2*pad,d=Math.min(window.devicePixelRatio||1,2);
     cv.width=w*d;cv.height=h*d;cv.style.width=w+'px';cv.style.height=h+'px';ctx.setTransform(d,0,0,d,0,0);
     var z=map.getZoom(),sc=256*Math.pow(2,z),o=map.getPixelOrigin(),ox=o.x+tl.x,oy=o.y+tl.y;
@@ -240,7 +247,13 @@ input[type=search]{width:100%}
     if(sel>=0)selMark.setLatLng(houseLatLng(sel)).addTo(map);else map.removeLayer(selMark);
   }
   map.on('moveend zoomend resize',function(){draw();markers();});
-  map.on('zoomstart',function(){cv.style.opacity=0;});map.on('zoomend',function(){cv.style.opacity=1;});
+  // Під час наближення полотно з будинками масштабується разом із картою, а не зникає
+  var cvPos=null,cvPad=0,cvCenter=null,cvZoom=0;
+  function cvTf(center,zoom){if(!cvPos)return;var scale=map.getZoomScale(zoom,cvZoom),half=map.getSize().multiplyBy(0.5).add([cvPad,cvPad]);
+    var off=map.project(center,zoom).subtract(map.project(cvCenter,zoom));
+    L.DomUtil.setTransform(cv,half.multiplyBy(-scale).add(cvPos).add(half).subtract(off),scale);}
+  L.DomUtil.addClass(cv,'leaflet-zoom-animated');
+  map.on('zoomanim',function(e){cvTf(e.center,e.zoom);});map.on('zoom',function(){cvTf(map.getCenter(),map.getZoom());});
   map.on('click',function(e){
     if(map.getZoom()<HOUSE_ZOOM)return;
     var best=nearest(e.latlng);
@@ -284,9 +297,9 @@ input[type=search]{width:100%}
     if(svg){var d=svg.querySelector('defs');if(!d){d=document.createElementNS('http://www.w3.org/2000/svg','defs');svg.insertBefore(d,svg.firstChild);}
       d.innerHTML=defs;made.forEach(function(m){var el=m[0].getElement();if(el)el.setAttribute('fill','url(#rp-'+m[1]+')');});}
     if(far)CITIES.forEach(function(c){
-      var m=L.circleMarker([c.lat,c.lon],{radius:6,color:tok('--now'),weight:2,fillColor:tok('--now'),fillOpacity:0.5}).addTo(cityLayer);
+      var m=L.marker([c.lat,c.lon],{icon:L.divIcon({className:'citychip',html:'<span>🏠 '+esc(c.name)+'</span>',iconSize:null})}).addTo(cityLayer);
       m.bindTooltip(esc(c.name)+': '+c.stats.buildings.toLocaleString('uk-UA')+' будинків на карті',{className:'reg',direction:'top'});
-      m.on('click',function(ev){L.DomEvent.stopPropagation(ev);var oi=opIdx[c.operator];if(oi!=null)pickOp(oi,false);map.setView([c.lat,c.lon],12);});
+      m.on('click',function(ev){L.DomEvent.stopPropagation(ev);var oi=opIdx[c.operator];if(oi!=null)pickOp(oi,false);map.flyTo([c.lat,c.lon],12,{duration:1.4});});
     });
   }
   function pickOp(oi,fly){selOp=oi;selGroup=null;sel=-1;filter=null;var op=OPS[oi];if(fly&&op.lat!=null)map.setView([op.lat,op.lon],Math.max(map.getZoom(),8));update();}
