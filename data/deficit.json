@@ -1,0 +1,121 @@
+{
+  "published_at": "2026-11-11 23:23",
+  "author_role": "Адміністратор",
+  "note": "",
+  "total_gen": 19418,
+  "total_demand": 19450,
+  "total_deficit": 32,
+  "accidents": 0,
+  "regions": [
+    {
+      "region": "Вінницька область",
+      "generation": 4770.0,
+      "demand": 1000.0
+    },
+    {
+      "region": "Запорізька область",
+      "generation": 3839.0,
+      "demand": 1800.0
+    },
+    {
+      "region": "Кіровоградська область",
+      "generation": 3302.0,
+      "demand": 1700.0
+    },
+    {
+      "region": "Волинська область",
+      "generation": 2835.0,
+      "demand": 2000.0
+    },
+    {
+      "region": "Івано-Франківська область",
+      "generation": 2500.0,
+      "demand": 1500.0
+    },
+    {
+      "region": "місто Київ",
+      "generation": 2206.0,
+      "demand": 1000.0
+    },
+    {
+      "region": "Харківська область",
+      "generation": 2175.0,
+      "demand": 4500.0
+    },
+    {
+      "region": "Рівненська область",
+      "generation": 2000.0,
+      "demand": 2000.0
+    },
+    {
+      "region": "Львівська область",
+      "generation": 2000.0,
+      "demand": 1000.0
+    },
+    {
+      "region": "Закарпатська область",
+      "generation": 2000.0,
+      "demand": 500.0
+    },
+    {
+      "region": "Дніпропетровська область",
+      "generation": 1765.0,
+      "demand": 2500.0
+    },
+    {
+      "region": "Полтавська область",
+      "generation": 625.0,
+      "demand": 2500.0
+    },
+    {
+      "region": "Херсонська область",
+      "generation": 500.0,
+      "demand": 1000.0
+    },
+    {
+      "region": "Черкаська область",
+      "generation": 444.0,
+      "demand": 1000.0
+    },
+    {
+      "region": "Чернігівська область",
+      "generation": 0,
+      "demand": 0
+    },
+    {
+      "region": "Чернівецька область",
+      "generation": 0,
+      "demand": 1000.0
+    },
+    {
+      "region": "Хмельницька область",
+      "generation": 0,
+      "demand": 0
+    },
+    {
+      "region": "Тернопільська область",
+      "generation": 0,
+      "demand": 500.0
+    },
+    {
+      "region": "Сумська область",
+      "generation": 0,
+      "demand": 1000.0
+    },
+    {
+      "region": "Одеська область",
+      "generation": 0,
+      "demand": 2000.0
+    },
+    {
+      "region": "Миколаївська область",
+      "generation": 0,
+      "demand": 1000.0
+    },
+    {
+      "region": "Житомирська область",
+      "generation": 0,
+      "demand": 1000.0
+    }
+  ]
+}

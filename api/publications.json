@@ -1,0 +1,25 @@
+{
+ "generated": "2026-11-11 23:23",
+ "publications": [
+  {
+   "id": 2,
+   "created_at": "2026-11-11 23:23:27",
+   "total_gen": 19418.0,
+   "total_demand": 19450.0,
+   "total_deficit": 31.0,
+   "accidents": 0,
+   "note": "Стан мережі в нормі",
+   "author": "Черговий диспетчер"
+  },
+  {
+   "id": 1,
+   "created_at": "2026-11-11 23:13:00",
+   "total_gen": 19418.0,
+   "total_demand": 19450.0,
+   "total_deficit": 31.0,
+   "accidents": 0,
+   "note": "перевірка",
+   "author": "Черговий диспетчер"
+  }
+ ]
+}
