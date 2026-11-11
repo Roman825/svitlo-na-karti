@@ -6,16 +6,25 @@
 <title>Світло на карті — графіки відключень</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Inter:wght@400;500;600&display=swap">
+<script>
+// Тема: збережений вибір або системна; ставиться до малювання сторінки
+(function(){var t;try{t=localStorage.getItem('sg_theme');}catch(e){}
+  document.documentElement.dataset.theme=t||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');})();
+</script>
 <style>
-:root{--bg:#0a0f17;--surface:rgba(17,26,39,.94);--line:#22314a;--fg:#e9eef6;--muted:#8a99ae;
+:root{--regline:#c9d3e2;--bg:#0a0f17;--surface:rgba(17,26,39,.94);--line:#22314a;--fg:#e9eef6;--muted:#8a99ae;
   --lit:#ffc857;--off:#4f74c9;--maybe:#b0762a;--unk:#7d7f85;--now:#6fd3ff;--ok:#4caf7a;--warn:#f0a93b;--bad:#e2574c;
   --display:"Unbounded","Inter",system-ui,sans-serif;--body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif}
+[data-theme=light]{--regline:#5b6b85;--bg:#e9eef6;--surface:rgba(255,255,255,.95);--line:#d3dcea;--fg:#18202e;--muted:#5f6f88;
+  --lit:#f2b01e;--off:#3d5a80;--maybe:#b0762a;--unk:#a3a9b3;--now:#0b6fd6}
+[data-theme=light] .leaflet-tile-pane{filter:grayscale(.55) brightness(1.03)}
+#theme{padding:3px 9px;margin-left:auto}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.4}
 #map{position:absolute;inset:0;background:var(--bg)}
 .leaflet-container{font-family:var(--body);background:var(--bg)}
 canvas.pts{position:absolute;pointer-events:none;transition:opacity .25s ease}
-.leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.82) contrast(.9) saturate(.35)}
+[data-theme=dark] .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.82) contrast(.9) saturate(.35)}
 /* області: плавна реакція на наведення */
 path.reg{transition:stroke-width .18s ease,stroke .18s ease,fill-opacity .25s ease;cursor:pointer}
 path.reg:hover{stroke-width:3px;stroke:var(--now);fill-opacity:.82}
@@ -95,7 +104,7 @@ input[type=search]{width:100%}
 <div id="map"></div>
 
 <div class="card" id="ctl">
-  <div class="row"><div><h1>Світло на карті</h1><div class="sub">Актуальні графіки відключень · Smart Grid SCADA</div></div><button id="toggle" type="button">▾</button></div>
+  <div class="row"><div><h1>Світло на карті</h1><div class="sub">Актуальні графіки відключень · Smart Grid SCADA</div></div><button id="theme" type="button" title="Світла або темна тема" aria-label="Змінити тему">◐</button><button id="toggle" type="button">▾</button></div>
   <div class="row"><div class="clock" id="clock">--:--</div><input type="range" id="time" min="0" max="1410" step="30" value="720" aria-label="Час доби"><button id="now" type="button">Зараз</button></div>
   <div class="row hide" id="days"></div>
   <div class="regs hide" id="regs"></div>
@@ -126,6 +135,11 @@ input[type=search]{width:100%}
   var CITIES=window.SG_CITIES||[];
   // Стан години → два півгодинні символи: 0 світло є, 1 немає, 2 можливе відключення
   var MAPV={yes:'00',no:'11',first:'10',second:'01',maybe:'22',mfirst:'20',msecond:'02'};
+  document.getElementById('theme').onclick=function(){
+    var n=document.documentElement.dataset.theme==='light'?'dark':'light';
+    try{localStorage.setItem('sg_theme',n);}catch(e){}
+    location.reload();                       // кольори карти й будинків перемальовуються з нуля
+  };
   var css=getComputedStyle(document.documentElement);function tok(n){return css.getPropertyValue(n).trim();}
   var COL=[tok('--lit'),tok('--off'),tok('--maybe'),tok('--unk')];
   function $(id){return document.getElementById(id);}
@@ -179,7 +193,7 @@ input[type=search]{width:100%}
   // ── Карта ─────────────────────────────────────────────────────────────────
   var map=L.map('map',{zoomControl:false,minZoom:5}).setView([48.7,31.6],6);
   L.control.zoom({position:'bottomleft'}).addTo(map);
-  var ATTR='© OpenStreetMap · межі областей: geoBoundaries · графіки: оператори через outage-data-ua · групи будинків: YASNO';
+  var ATTR='© OpenStreetMap · межі областей: geoBoundaries · графіки: оператори через outage-data-ua, OE_OUTAGE_DATA, ua-outages · групи будинків: YASNO';
   // Плитки OpenStreetMap показують назви українською; темний вигляд дає фільтр у стилях
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:ATTR}).addTo(map);
   map.createPane('housePane');map.getPane('housePane').style.zIndex=360;
@@ -238,7 +252,9 @@ input[type=search]{width:100%}
   var regRenderer=L.svg({pane:'regPane'}),REGNAME={};
   var regLayer=L.layerGroup().addTo(map),cityLayer=L.layerGroup().addTo(map);
   function regionPopup(nm,op,slot){
-    if(!op||!op.groups.length)return '<b>'+esc(nm)+'</b><br>Оператор цієї області не публікує графіки у відкритому доступі, тому даних немає.';
+    if(!op)return '<b>'+esc(nm)+'</b><br>Для цієї області немає відкритих даних про графіки.';
+    if(!op.sched[dayKey]){var ds=Object.keys(op.sched).sort(),ld=ds.length?ds[ds.length-1]:'';
+      return '<b>'+esc(nm)+'</b><br>'+esc(op.operator)+'<br>На цей день графік погодинних відключень не оголошено'+(ld?' (останній був '+ld.slice(8,10)+'.'+ld.slice(5,7)+')':'')+'.';}
     var off=[],may=[],on=[];op.groups.forEach(function(g){var s=st(op,g,slot);(s===1?off:s===2?may:on).push(g);});
     function list(a,bg,fg){return a.map(function(v){return '<span style="display:inline-block;padding:1px 6px;margin:2px 2px 0 0;border-radius:8px;font-size:11px;background:'+bg+';color:'+fg+'">'+esc(v)+'</span>';}).join('')||'—';}
     return '<b>'+esc(nm)+'</b><br>'+esc(op.operator)+' · '+fmt(t)+'<br>Без світла ('+off.length+'):<br>'+list(off,'#4f74c9','#fff')+
@@ -252,14 +268,14 @@ input[type=search]{width:100%}
     (window.SG_REGIONS||[]).forEach(function(g){
       var oi=-1;OPS.forEach(function(o,i){if(o.region_code===g.code&&oi<0)oi=i;});
       var op=oi>=0?OPS[oi]:null,s=op?regionShare(op,slot):{n:0,off:0},has=s.n>0;
-      var p=L.polygon(g.rings,{renderer:regRenderer,interactive:far,className:'reg'+(has?'':' nodata'),color:has?(oi===selOp?tok('--now'):'#c9d3e2'):'#7f8ea6',
-        weight:oi===selOp&&has?2.4:1.1,dashArray:has?null:'4 5',fillColor:'#7f8ea6',fillOpacity:has?(far?0.7:0):(far?0.1:0)}).addTo(regLayer);
+      var p=L.polygon(g.rings,{renderer:regRenderer,interactive:far,className:'reg'+(has?'':' nodata'),color:has?(oi===selOp?tok('--now'):tok('--regline')):'#7f8ea6',
+        weight:oi===selOp&&has?2.4:1.1,dashArray:has?null:'4 5',fillColor:'#7f8ea6',fillOpacity:has?(far?0.7:0):0}).addTo(regLayer);
       if(has){var w=14,offW=Math.round(w*s.off/s.n*10)/10;
         defs+='<pattern id="rp-'+g.code+'" width="'+w+'" height="'+w+'" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="'+w+'" height="'+w+'" fill="'+tok('--lit')+'"/>'+(offW>0?'<rect width="'+offW+'" height="'+w+'" fill="'+tok('--off')+'"/>':'')+'</pattern>';
         made.push([p,g.code]);}
       if(far){
         var nm=REGNAME[g.code]||g.code;
-        p.bindTooltip(esc(nm)+'<br>'+(has?'без світла: '+s.off+' з '+s.n+' груп':'немає відкритих даних'),{className:'reg',sticky:true});
+        p.bindTooltip(esc(nm)+'<br>'+(has?'без світла: '+s.off+' з '+s.n+' груп':(op?'графік на цей день не оголошено':'немає відкритих даних')),{className:'reg',sticky:true});
         p.on('click',function(ev){L.DomEvent.stopPropagation(ev);if(op){selOp=oi;selGroup=null;sel=-1;filter=null;update();}
           L.popup({maxWidth:280}).setLatLng(ev.latlng).setContent(regionPopup(nm,op,slot)).openOn(map);});
       }
@@ -307,7 +323,7 @@ input[type=search]{width:100%}
     OPS.forEach(function(op,oi){
       var s=regionShare(op,slot),b=document.createElement('button');b.type='button';
       b.setAttribute('aria-pressed',oi===selOp?'true':'false');
-      b.innerHTML='<span class="dot r '+shareClass(s)+'"></span> '+esc(op.region)+'<small>'+(s.n?'без світла '+s.off+' з '+s.n+' груп':'немає даних')+'</small>';
+      b.innerHTML='<span class="dot r '+shareClass(s)+'"></span> '+esc(op.region)+'<small>'+(s.n?'без світла '+s.off+' з '+s.n+' груп':'графік не оголошено')+'</small>';
       b.addEventListener('click',function(){pickOp(oi,true);});box.appendChild(b);
     });
     var op=OPS[selOp];
