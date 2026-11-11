@@ -296,7 +296,7 @@ input[type=search]{width:100%}
     var svg=regRenderer._container;
     if(svg){var d=svg.querySelector('defs');if(!d){d=document.createElementNS('http://www.w3.org/2000/svg','defs');svg.insertBefore(d,svg.firstChild);}
       d.innerHTML=defs;made.forEach(function(m){var el=m[0].getElement();if(el)el.setAttribute('fill','url(#rp-'+m[1]+')');});}
-    if(far)CITIES.forEach(function(c){
+    if(false)CITIES.forEach(function(c){   // окрема мітка міста не потрібна
       var m=L.marker([c.lat,c.lon],{icon:L.divIcon({className:'citychip',html:'<span>🏠 '+esc(c.name)+'</span>',iconSize:null})}).addTo(cityLayer);
       m.bindTooltip(esc(c.name)+': '+c.stats.buildings.toLocaleString('uk-UA')+' будинків на карті',{className:'reg',direction:'top'});
       m.on('click',function(ev){L.DomEvent.stopPropagation(ev);var oi=opIdx[c.operator];if(oi!=null)pickOp(oi,false);map.flyTo([c.lat,c.lon],12,{duration:1.4});});
