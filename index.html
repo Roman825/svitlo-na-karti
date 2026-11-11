@@ -53,6 +53,9 @@ input[type=search]{width:100%}
 .ticks{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:3px}
 .leaflet-tooltip.reg{background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:8px;box-shadow:none;font-size:12px}
 .leaflet-tooltip.reg:before{display:none}
+.pin{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;background:#fff;border:2px solid var(--ok);box-shadow:0 1px 5px rgba(0,0,0,.5)}
+.pin.closed{border-color:var(--unk);filter:grayscale(1)}
+.leaflet-popup-content{color:#18202e}
 #toggle{display:none}
 @media (max-width:700px){
   #ctl.min .hide{display:none}
@@ -307,6 +310,16 @@ input[type=search]{width:100%}
     update();loadLive();setInterval(loadLive,5*60*1000);
   }).catch(function(){$('meta').textContent='Не вдалося завантажити дані графіків.';});
   getJSON('api/deficit.json').then(deficit).catch(function(){});
+  // Пункти незламності, які веде диспетчер у застосунку
+  getJSON('api/points.json').then(function(j){
+    (j.points||[]).forEach(function(p){
+      var icon=L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,13],html:'<div class="pin'+(p.status==='closed'?' closed':'')+'">🔥</div>'});
+      var yes=function(v){return v?'так':'ні';};
+      L.marker([p.lat,p.lon],{icon:icon}).addTo(map).bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(p.address)+'<br>'+
+        (p.status==='open'?'Працює':'Зачинено')+' · '+esc(p.work_hours)+'<br>Місць: '+p.capacity+' · генератор: '+yes(p.has_generator)+
+        ' · обігрів: '+yes(p.has_heating)+' · інтернет: '+yes(p.has_internet));
+    });
+  }).catch(function(){});
 })();
 </script>
 </body>
