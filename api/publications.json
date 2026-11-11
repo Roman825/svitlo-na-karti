@@ -1,6 +1,16 @@
 {
- "generated": "2026-11-11 23:23",
+ "generated": "2026-11-11 23:42",
  "publications": [
+  {
+   "id": 3,
+   "created_at": "2026-11-11 23:23:57",
+   "total_gen": 19418.0,
+   "total_demand": 19450.0,
+   "total_deficit": 32.0,
+   "accidents": 0,
+   "note": "",
+   "author": "Адміністратор системи"
+  },
   {
    "id": 2,
    "created_at": "2026-11-11 23:23:27",
