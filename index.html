@@ -19,6 +19,7 @@
   --lit:#f2b01e;--off:#3d5a80;--maybe:#b0762a;--unk:#a3a9b3;--now:#0b6fd6}
 [data-theme=light] .leaflet-tile-pane{filter:grayscale(.55) brightness(1.03)}
 #theme{padding:3px 9px;margin-left:auto}
+.leaflet-container path.leaflet-interactive:focus,.leaflet-container .leaflet-interactive:focus{outline:none}   /* без прямокутної рамки після кліку по області */
 .citychip{width:auto!important;height:auto!important}
 .citychip span{display:inline-block;transform:translate(-50%,-50%);white-space:nowrap;padding:3px 10px;border-radius:12px;background:var(--now);color:#fff;font-size:12px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.35);cursor:pointer;transition:transform .15s ease}
 .citychip span:hover{transform:translate(-50%,-50%) scale(1.08)}
@@ -290,7 +291,7 @@ input[type=search]{width:100%}
         var nm=REGNAME[g.code]||g.code;
         p.bindTooltip(esc(nm)+'<br>'+(has?'без світла: '+s.off+' з '+s.n+' груп':(op?'графік на цей день не оголошено':'немає відкритих даних')),{className:'reg',sticky:true});
         p.on('click',function(ev){L.DomEvent.stopPropagation(ev);if(op){selOp=oi;selGroup=null;sel=-1;filter=null;update();}
-          L.popup({maxWidth:280}).setLatLng(ev.latlng).setContent(regionPopup(nm,op,slot)).openOn(map);});
+          p.closeTooltip();L.popup({maxWidth:280}).setLatLng(ev.latlng).setContent(regionPopup(nm,op,slot)).openOn(map);});
       }
     });
     var svg=regRenderer._container;
